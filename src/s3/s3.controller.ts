@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, Res, UploadedFile, HttpStatus  } from '@nestjs/common';
 import { S3Service } from './s3.service';
 import { S3 } from 'aws-sdk';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request, UploadedFile } from '@nestjs/common/decorators';
+import { Response } from 'express'
 
 @Controller('upload')
 export class S3Controller {
@@ -10,16 +10,17 @@ export class S3Controller {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async uploadApk(@UploadedFile() file: Express.Multer.File) {
+  async uploadApk(@Res() res: Response, @UploadedFile() file: Express.Multer.File) {
     try {
       const s3Result = await this.s3Service.uploadPublicFile(
         file.buffer,
         file.originalname
       );
       const path = s3Result.url;
-      return path;
+      res.status(HttpStatus.OK).send(path);
     } catch (error) {
       console.log(error);
+      res.status(HttpStatus.BAD_REQUEST);
     }
   }
 }
