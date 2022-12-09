@@ -9,7 +9,7 @@ module.exports = {
     connection: {
       host: 'localhost',
       user: 'root',
-      password: 'ABCD@1221',
+      password: 'Quanglai@2021',
       database: 'mong_db',
     },
   },

@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { KnexModule } from 'nest-knexjs';
+import { S3Module } from './s3/s3.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { KnexModule } from 'nest-knexjs';
       isGlobal: true,
       envFilePath: ['.env.dev', '.env.prod'],
     }),
+    S3Module,
     // KnexModule.forRoot({
     //   config: {
     //     client: 'mysql',
