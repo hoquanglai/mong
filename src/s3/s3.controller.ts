@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, Res, UploadedFile, HttpStatus  } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, Res, UploadedFile, HttpStatus  } from '@nestjs/common';
 import { S3Service } from './s3.service';
 import { S3 } from 'aws-sdk';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -10,7 +10,7 @@ export class S3Controller {
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async uploadApk(@Res() res: Response, @UploadedFile() file: Express.Multer.File) {
+  async upload(@Res() res: Response, @UploadedFile() file: Express.Multer.File) {
     try {
       const s3Result = await this.s3Service.uploadPublicFile(
         file.buffer,

@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { KnexModule } from 'nest-knexjs';
 import { S3Module } from './s3/s3.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -11,7 +12,12 @@ import { S3Module } from './s3/s3.module';
       isGlobal: true,
       envFilePath: ['.env.dev', '.env.prod'],
     }),
+
+
+
     S3Module,
+
+    PaymentModule,
     // KnexModule.forRoot({
     //   config: {
     //     client: 'mysql',
