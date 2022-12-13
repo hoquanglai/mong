@@ -5,8 +5,8 @@ const paypal = require('paypal-rest-sdk');
 
 paypal.configure({
   'mode': 'sandbox',
-  'client_id': 'AS-bDot22tsoFcc81GqYbpEuvLViH_uKJVLmJ1rzCvj9ubPFA8s_Is60mZx1MK35ZJX7c1a1LE1LV5yV',
-  'client_secret': 'EKgXSWQeedLuCEC0ARXKQTmRpNBYhmL0f2pL6cEZl7PyQiQnTunHUvUY2PdW3WSVkHqkc0hGUlxCZibA'
+  'client_id': process.env.PAY_CLIENT_ID,
+  'client_secret': process.env.PAY_CLIENT_SECRET
 });
 
 
@@ -54,6 +54,7 @@ export class PaymentService {
               }
             });
           } catch (error) {
+            console.log(error);
             throw error;
           }
     }
@@ -77,7 +78,8 @@ export class PaymentService {
                 }
             });
         } catch (error) {
-            
+            console.log(error);
+            throw error;
         }
     }
 }
