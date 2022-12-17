@@ -1,17 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Knex } from 'knex';
 import { InjectConnection } from 'nest-knexjs';
-import { Role } from 'src/auth/role/user_roles.enum';
+import { IUser } from '../auth/interface/user_entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResponseUserDto } from './dto/response-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from '../../dist/auth/interface/user_interface';
 
 @Injectable()
 export class UserService {
   constructor(@InjectConnection() private readonly knex: Knex) {}
   async create(user: CreateUserDto): Promise<ResponseUserDto> {
-    const createdUser = await this.knex('user').insert<User>(user);
+    const createdUser = await this.knex('user').insert<IUser>(user);
     const { password, ...data } = user;
     return data;
   }
@@ -29,32 +28,30 @@ export class UserService {
     return `This action returns a #${id} user`;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(updateUserDto: UpdateUserDto) {
+    console.log({ updateUserDto });
+    await this.knex('user')
+      .update(updateUserDto)
+      .where({ email: updateUserDto.email });
+    return `update succes`;
   }
 
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
 
-  async findOneByEmail(email: string): Promise<any> {
-    try {
-      const user = await this.knex
-        .select('id', 'email', 'name', 'password', 'role')
-        .from<User>('user')
-        .where({ email: email })
-        .first();
-      console.log(user);
-
-      if (!user) {
-        throw new NotFoundException(
-          `User with email: "${email}" does not exists`,
-        );
-      }
-
-      return user;
-    } catch (err) {
-      throw new Error(err);
+  async findOneByEmail(email: string): Promise<IUser> {
+    const user = await this.knex
+      .select('*')
+      .from<IUser>('user')
+      .where({ email: email })
+      .first();
+    if (!user) {
+      throw new NotFoundException(
+        `User with email: "${email}" does not exists`,
+      );
     }
+
+    return user;
   }
 }

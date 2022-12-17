@@ -1,7 +1,7 @@
 export class DefaultResponse {
   message: string;
-  data: any;
-  public constructor(message: string, data: any) {
+  data?: any;
+  public constructor(message: string, data?: any) {
     this.message = message;
     this.data = data;
   }

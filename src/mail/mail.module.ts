@@ -17,8 +17,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
           auth: {
             // user: process.env.MAIL_USERNAME,
             // pass: process.env.MAIL_PASSWORD,
-            user: 'thehungc4123@gmail.com',
-            pass: 'ocdcyunxvjhcyios',
+            user: 'phungthehungc4@gmail.com',
+            pass: process.env.MAIL_PW,
           },
         },
         template: {
