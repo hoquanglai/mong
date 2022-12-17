@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { jwtTokenData } from '../../../dist/auth/interface/token.interface';
 import { UserService } from '../../user/user.service';
 import { ROLES_KEY } from './roles.decorator';
 import { Role } from './user_roles.enum';
@@ -26,27 +25,26 @@ export class RolesGuard implements CanActivate {
         ROLES_KEY,
         [context.getHandler(), context.getClass()],
       );
-
       if (!requiredRoles) {
         return true;
       }
       const request = context.switchToHttp().getRequest();
-
       const token = request?.headers?.authorization?.slice(7);
+      console.log({ token });
       if (!token || !token.length) {
         throw new ForbiddenException(
           'You have no permission to access this route',
         );
       }
 
-      const dataFromToken = this.jwtService.verify<jwtTokenData>(token, {
-        secret: 'secret-key-of-access_token',
+      const dataFromToken = this.jwtService.verify(token, {
+        secret: process.env.SECRET_KEY_ACCESS_TOKEN,
       });
       const userFromDB = await this.userService.findOneByEmail(
         dataFromToken.userEmail,
       );
       const isValidRole = requiredRoles.some((role) =>
-        userFromDB.role.includes(role),
+        userFromDB.roles.includes(role),
       );
       if (!isValidRole)
         throw new ForbiddenException(
@@ -54,14 +52,13 @@ export class RolesGuard implements CanActivate {
         );
       return true;
     } catch (err) {
-      console.log('some error from canActivate role', err.message);
+      console.log('some error from canActivate role', err);
       if (err.message === 'jwt expired') {
         throw new UnauthorizedException('Token expired');
       }
       throw new ForbiddenException(
         'You have no permission to access this route',
       );
-      return false;
     }
   }
 }

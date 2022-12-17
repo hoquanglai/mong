@@ -23,14 +23,20 @@ export class MailService {
       console.log('eeeeeeeeeeee', err);
     }
   }
-  // sendMail() {
-  //   var transporter = nodemailer.createTransport({
-  //     // config mail server
-  //     service: 'Gmail',
-  //     auth: {
-  //       user: 'mailserver@gmail.com',
-  //       pass: 'password',
-  //     },
-  //   });
-  // }
+
+  async sendResetPassword(email: string, token: string) {
+    try {
+      const url = `http://localhost:3000.com/auth/reset-password?token=${token}`;
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Reset Mong Password',
+        template: './reset_password',
+        context: {
+          url,
+        },
+      });
+    } catch (err) {
+      console.log('eeeeeeeeeeee', err);
+    }
+  }
 }
