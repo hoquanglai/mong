@@ -2,7 +2,9 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
+  Render,
   Req,
   Res,
   UseGuards,
@@ -18,6 +20,14 @@ import { ChangePasswordDto } from './dto/changePassword.dto';
 import { NotFoundException } from '@nestjs/common';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import * as bcrypt from 'bcrypt';
+import { GoogleLoginDto } from './interface/googleLoginData.interface';
+import { JwtService } from '@nestjs/jwt';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+);
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +35,20 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly mailService: MailService,
+    private readonly jwtService: JwtService,
   ) {}
+
+  @Post('login-google')
+  async loginGoogle(@Body() data: GoogleLoginDto) {
+    const ticket = await client.verifyIdToken({
+      idToken: data.token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    // Gửi về thông tin user + access token
+    return payload;
+  }
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
