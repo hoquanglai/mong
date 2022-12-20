@@ -10,7 +10,5 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 
-  access_token?: string;
-  refresh_token?: string;
-  register_token?: string;
+  verify_token?: string;
 }

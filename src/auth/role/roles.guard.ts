@@ -40,9 +40,12 @@ export class RolesGuard implements CanActivate {
       const dataFromToken = this.jwtService.verify(token, {
         secret: process.env.SECRET_KEY_ACCESS_TOKEN,
       });
+
       const userFromDB = await this.userService.findOneByEmail(
-        dataFromToken.userEmail,
+        dataFromToken.email,
       );
+      console.log({ userFromDB });
+
       const isValidRole = requiredRoles.some((role) =>
         userFromDB.roles.includes(role),
       );

@@ -10,6 +10,7 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { ResponseUserDto } from '../user/dto/response-user.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { VerifyTokenData } from './interface/verifyToken.interface';
 @Injectable()
 export class AuthService {
   constructor(
@@ -34,9 +35,9 @@ export class AuthService {
     };
   }
 
-  async generateRegisterVerifyToken(userEmail: string) {
+  async generateVerifyToken({ email, purpose }: VerifyTokenData) {
     const token = await this.jwtService.signAsync(
-      { email: userEmail },
+      { email, purpose },
       {
         secret: process.env.SECRET_KEY_REGISTER,
         expiresIn: 60 * 60 * 5,

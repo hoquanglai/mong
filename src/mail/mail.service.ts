@@ -1,5 +1,9 @@
 import { MailerService } from '@nestjs-modules/mailer/dist';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ResponseUserDto } from '../user/dto/response-user.dto';
 // var nodemailer = require('nodemailer');
 
@@ -21,6 +25,7 @@ export class MailService {
       });
     } catch (err) {
       console.log('eeeeeeeeeeee', err);
+      throw new BadRequestException('Some things went wrong');
     }
   }
 

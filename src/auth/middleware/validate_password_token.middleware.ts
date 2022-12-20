@@ -28,6 +28,12 @@ export class ValidateResetPasswordTokenMiddleware implements NestMiddleware {
         secret: process.env.SECRET_KEY_RESET_PASSWORD,
       });
 
+      if (dataFromToken.purpose !== process.env.PP_RESET_PASSWORD) {
+        throw new BadRequestException(
+          'This token is not for confirm reset password',
+        );
+      }
+
       const user = await this.userService.findOneByEmail(dataFromToken.email);
 
       const isValidToken = user.password_token === tokenFromRequest;
@@ -37,6 +43,7 @@ export class ValidateResetPasswordTokenMiddleware implements NestMiddleware {
 
       req.user = user;
       req.body = { ...req.body, ...user };
+
       next();
     } catch (err) {
       console.log('Error when validate reset password token', err);

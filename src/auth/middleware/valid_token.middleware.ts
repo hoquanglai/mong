@@ -9,14 +9,13 @@ import { NextFunction, Request, Response } from 'express';
 import { UserService } from '../../user/user.service';
 
 @Injectable()
-export class ValidateTokenMiddleware implements NestMiddleware {
+export class ValidateRegisterTokenMiddleware implements NestMiddleware {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
   ) {}
   async use(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log('eeeeeeeeeeeeeeeeeeeeeeeee');
       const tokenFromRequest = req.body?.token;
       if (!tokenFromRequest) {
         throw new BadRequestException('Token is empty');
@@ -24,8 +23,12 @@ export class ValidateTokenMiddleware implements NestMiddleware {
       const dataFromToken = this.jwtService.verify(tokenFromRequest, {
         secret: process.env.SECRET_KEY_REGISTER,
       });
+      if (dataFromToken.purpose !== process.env.PP_REGISTER) {
+        throw new BadRequestException('This token is not for confirm register');
+      }
+
       const user = await this.userService.findOneByEmail(dataFromToken.email);
-      console.log(user);
+      console.log({ dataFromToken });
 
       const isValidToken = user.register_token === tokenFromRequest;
       if (!isValidToken) {
