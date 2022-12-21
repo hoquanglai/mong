@@ -12,7 +12,6 @@ import { AuthService } from './auth.service';
 import { ValidateRegisterTokenMiddleware } from './middleware/valid_token.middleware';
 import { ValidateResetPasswordTokenMiddleware } from './middleware/validate_password_token.middleware';
 import { LocalStrategy } from './strategy/local.strategy';
-import { RegisterStrategy } from './strategy/register.strategy';
 
 @Module({
   imports: [],
@@ -21,7 +20,6 @@ import { RegisterStrategy } from './strategy/register.strategy';
     AuthService,
     UserService,
     LocalStrategy,
-    RegisterStrategy,
     JwtService,
     UserService,
     MailService,

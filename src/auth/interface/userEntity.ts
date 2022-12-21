@@ -6,7 +6,5 @@ export interface IUser {
   password: string;
   roles?: Role[];
   access_token?: string;
-  refresh_token?: string;
-  register_token?: string;
-  password_token?: string;
+  verify_token?: string;
 }

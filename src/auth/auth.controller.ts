@@ -2,29 +2,25 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
+  NotFoundException,
   Post,
-  Render,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
+import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
+import { OAuth2Client } from 'google-auth-library';
+import { MailService } from '../mail/mail.service';
+import { SuccessResponse } from '../response/success.response';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
-import { SuccessResponse } from '../response/success.response';
-import { MailService } from '../mail/mail.service';
+import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/changePassword.dto';
-import { NotFoundException } from '@nestjs/common';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
-import * as bcrypt from 'bcrypt';
-import { GoogleLoginDto } from './interface/googleLoginData.interface';
-import { JwtService } from '@nestjs/jwt';
-import { OAuth2Client } from 'google-auth-library';
-import { CreateExternalUserDto } from '../user/dto/create-external-user.dto';
-import { LoginExternalDto } from './dto/login-external.dto';
+import { VerifyPurpose } from './interface/register_purpose.enum';
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -48,9 +44,7 @@ export class AuthController {
       id: userId,
       email: user?.email,
     });
-    return res
-      .status(200)
-      .json(new SuccessResponse('Login successful0', token));
+    return res.status(200).json(new SuccessResponse('Login successful', token));
   }
 
   @UseGuards(AuthGuard('local'))
@@ -58,7 +52,7 @@ export class AuthController {
   async login(@Res() res: Response, @Req() req: Request) {
     try {
       const tokens = await this.authService.login(req.user);
-      return res.json({ ...tokens });
+      return res.status(200).json({ ...tokens });
     } catch (err) {
       throw new BadRequestException('Some thing went wrong');
     }
@@ -84,7 +78,7 @@ export class AuthController {
     try {
       const token = await this.authService.generateVerifyToken({
         email: dto.email,
-        purpose: process.env.PP_REGISTER,
+        purpose: VerifyPurpose.REGISTER,
       });
       dto.verify_token = token;
       await this.mailService.sendRegisterConfirmation(dto, token);
@@ -118,9 +112,9 @@ export class AuthController {
     }
     const token = await this.authService.generateVerifyToken({
       email,
-      purpose: process.env.PP_RESET_PASSWORD,
+      purpose: VerifyPurpose.RESET_PASSWORDS,
     });
-    user.password_token = token;
+    user.verify_token = token;
     await this.userService.update(user);
     await this.mailService.sendResetPassword(email, token);
     return res
