@@ -2,27 +2,25 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
+  NotFoundException,
   Post,
-  Render,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
+import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
+import { OAuth2Client } from 'google-auth-library';
+import { MailService } from '../mail/mail.service';
+import { SuccessResponse } from '../response/success.response';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
-import { SuccessResponse } from '../response/success.response';
-import { MailService } from '../mail/mail.service';
+import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/changePassword.dto';
-import { NotFoundException } from '@nestjs/common';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
-import * as bcrypt from 'bcrypt';
-import { GoogleLoginDto } from './interface/googleLoginData.interface';
-import { JwtService } from '@nestjs/jwt';
-import { OAuth2Client } from 'google-auth-library';
+import { VerifyPurpose } from './interface/register_purpose.enum';
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -39,15 +37,14 @@ export class AuthController {
   ) {}
 
   @Post('login-google')
-  async loginGoogle(@Body() data: GoogleLoginDto) {
-    const ticket = await client.verifyIdToken({
-      idToken: data.token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+  async loginGoogle(@Req() req: Request, @Res() res: Response) {
+    const user: any = req.user;
+    const userId = await this.userService.createThirdParty(user);
+    const token = await this.authService.generateToken({
+      id: userId,
+      email: user?.email,
     });
-    const payload = ticket.getPayload();
-
-    // Gửi về thông tin user + access token
-    return payload;
+    return res.status(200).json(new SuccessResponse('Login successful', token));
   }
 
   @UseGuards(AuthGuard('local'))
@@ -55,28 +52,37 @@ export class AuthController {
   async login(@Res() res: Response, @Req() req: Request) {
     try {
       const tokens = await this.authService.login(req.user);
-      return res.json({ ...tokens });
+      return res.status(200).json({ ...tokens });
     } catch (err) {
       throw new BadRequestException('Some thing went wrong');
     }
   }
+
   @Post('confirm-register')
   // @UseGuards(AuthGuard('register_strategy'))
   async confirmRegister(@Res() res: Response, @Req() req: Request) {
-    await this.userService.update(req.user);
-    return res.status(200).json({ data: 'cc' });
+    try {
+      await this.userService.update({
+        ...req.user,
+        verify_token: null,
+        isActive: true,
+      });
+      return res.status(200).json(new SuccessResponse('Register successfully'));
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   @Post('register')
   async register(@Body() dto: CreateUserDto, @Res() res: Response) {
     try {
-      const token = await this.authService.generateRegisterVerifyToken(
-        dto.email,
-      );
-      dto.register_token = token;
-      await this.authService.register(dto);
-
+      const token = await this.authService.generateVerifyToken({
+        email: dto.email,
+        purpose: VerifyPurpose.REGISTER,
+      });
+      dto.verify_token = token;
       await this.mailService.sendRegisterConfirmation(dto, token);
+      await this.authService.register(dto);
       return res
         .status(200)
         .json(
@@ -104,8 +110,11 @@ export class AuthController {
     if (!user) {
       throw new NotFoundException(`User with email: ${email} not exists`);
     }
-    const token = await this.authService.generateResetPasswordToken(email);
-    user.password_token = token;
+    const token = await this.authService.generateVerifyToken({
+      email,
+      purpose: VerifyPurpose.RESET_PASSWORDS,
+    });
+    user.verify_token = token;
     await this.userService.update(user);
     await this.mailService.sendResetPassword(email, token);
     return res

@@ -25,7 +25,8 @@ export class RolesGuard implements CanActivate {
         ROLES_KEY,
         [context.getHandler(), context.getClass()],
       );
-      if (!requiredRoles) {
+      console.log({ requiredRoles });
+      if (!requiredRoles || requiredRoles[0] === Role.ALL) {
         return true;
       }
       const request = context.switchToHttp().getRequest();
@@ -40,9 +41,12 @@ export class RolesGuard implements CanActivate {
       const dataFromToken = this.jwtService.verify(token, {
         secret: process.env.SECRET_KEY_ACCESS_TOKEN,
       });
+
       const userFromDB = await this.userService.findOneByEmail(
-        dataFromToken.userEmail,
+        dataFromToken.email,
       );
+      console.log({ userFromDB });
+
       const isValidRole = requiredRoles.some((role) =>
         userFromDB.roles.includes(role),
       );

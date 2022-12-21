@@ -1,16 +1,22 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
 import { KnexModule } from 'nest-knexjs';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { FireBaseAuthMiddleware } from './auth/middleware/firebase_auth.middleware';
+import { RolesGuard } from './auth/role/roles.guard';
+import { MailModule } from './mail/mail.module';
 import { PaymentModule } from './payment/payment.module';
 import { S3Module } from './s3/s3.module';
 import { UserModule } from './user/user.module';
-import { RolesGuard } from './auth/role/roles.guard';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { MailModule } from './mail/mail.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -57,4 +63,11 @@ import { MailModule } from './mail/mail.module';
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: RolesGuard }],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(FireBaseAuthMiddleware).forRoutes({
+      path: 'auth/login-google',
+      method: RequestMethod.POST,
+    });
+  }
+}

@@ -7,27 +7,31 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
 import { UserService } from '../../user/user.service';
+import { VerifyPurpose } from '../interface/register_purpose.enum';
 
 @Injectable()
-export class ValidateTokenMiddleware implements NestMiddleware {
+export class ValidateRegisterTokenMiddleware implements NestMiddleware {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
   ) {}
   async use(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log('eeeeeeeeeeeeeeeeeeeeeeeee');
       const tokenFromRequest = req.body?.token;
       if (!tokenFromRequest) {
         throw new BadRequestException('Token is empty');
       }
       const dataFromToken = this.jwtService.verify(tokenFromRequest, {
-        secret: process.env.SECRET_KEY_REGISTER,
+        secret: process.env.SECRET_KEY_VERIFY,
       });
-      const user = await this.userService.findOneByEmail(dataFromToken.email);
-      console.log(user);
+      if (dataFromToken.purpose !== VerifyPurpose.REGISTER) {
+        throw new BadRequestException('This token is not for confirm register');
+      }
 
-      const isValidToken = user.register_token === tokenFromRequest;
+      const user = await this.userService.findOneByEmail(dataFromToken.email);
+      console.log({ dataFromToken });
+
+      const isValidToken = user.verify_token === tokenFromRequest;
       if (!isValidToken) {
         throw new NotFoundException('invalid token');
       }

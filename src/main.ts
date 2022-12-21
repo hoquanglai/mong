@@ -8,9 +8,9 @@ import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useGlobalPipes(new ValidationPipe());
   const { httpAdapter } = app.get(HttpAdapterHost);
   await app.listen(3000);
-  app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
   app.enableCors();
   app.setGlobalPrefix('api');

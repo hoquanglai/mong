@@ -10,6 +10,7 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { ResponseUserDto } from '../user/dto/response-user.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { VerifyTokenData } from './interface/verifyToken.interface';
 @Injectable()
 export class AuthService {
   constructor(
@@ -34,22 +35,11 @@ export class AuthService {
     };
   }
 
-  async generateRegisterVerifyToken(userEmail: string) {
+  async generateVerifyToken({ email, purpose }: VerifyTokenData) {
     const token = await this.jwtService.signAsync(
-      { email: userEmail },
+      { email, purpose },
       {
-        secret: process.env.SECRET_KEY_REGISTER,
-        expiresIn: 60 * 60 * 5,
-      },
-    );
-    return token;
-  }
-
-  async generateResetPasswordToken(userEmail: string) {
-    const token = await this.jwtService.signAsync(
-      { email: userEmail },
-      {
-        secret: process.env.SECRET_KEY_RESET_PASSWORD,
+        secret: process.env.SECRET_KEY_VERIFY,
         expiresIn: 60 * 60 * 5,
       },
     );
@@ -69,6 +59,10 @@ export class AuthService {
 
   validateUser = async (email: string, password: string) => {
     const user = await this.userService.findOneByEmail(email);
+    console.log({ email });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new UnauthorizedException(
@@ -94,9 +88,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
 
     user.password = hashedPassword;
-    user.access_token = null;
-    user.refresh_token = null;
-    user.register_token = null;
+    user.verify_token = null;
 
     await this.userService.update(user);
   }

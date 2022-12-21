@@ -1,18 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Knex } from 'knex';
 import { InjectConnection } from 'nest-knexjs';
-import { IUser } from '../auth/interface/user_entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResponseUserDto } from './dto/response-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateExternalUserDto } from './dto/create-external-user.dto';
+import { IUser } from 'src/auth/interface/userEntity';
 
 @Injectable()
 export class UserService {
   constructor(@InjectConnection() private readonly knex: Knex) {}
   async create(user: CreateUserDto): Promise<ResponseUserDto> {
-    const createdUser = await this.knex('user').insert<IUser>(user);
+    await this.knex('user').insert<IUser>(user);
     const { password, ...data } = user;
     return data;
+  }
+
+  async createThirdParty(user: CreateExternalUserDto): Promise<number> {
+    const userFromDB = await this.findOneByEmail(user.email);
+    if (!userFromDB) {
+      const userId = await this.knex('user').insert<IUser>(user);
+      return userId[0];
+    }
+    return userFromDB.id;
   }
 
   async findAll() {
@@ -47,9 +57,7 @@ export class UserService {
       .where({ email: email })
       .first();
     if (!user) {
-      throw new NotFoundException(
-        `User with email: "${email}" does not exists`,
-      );
+      return null;
     }
 
     return user;
