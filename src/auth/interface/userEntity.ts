@@ -4,7 +4,8 @@ export interface IUser {
   email: string;
   name: string;
   password: string;
+  avatar: string | null;
+  isActive: boolean;
   roles?: Role[];
-  access_token?: string;
   verify_token?: string;
 }

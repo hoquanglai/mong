@@ -4,5 +4,6 @@ export class DefaultResponse {
   public constructor(message: string, data?: any) {
     this.message = message;
     this.data = data;
+    console.log({ data });
   }
 }

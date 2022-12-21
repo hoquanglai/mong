@@ -73,7 +73,7 @@ export class AuthService {
   };
 
   async login(user: any) {
-    const payload = { userEmail: user.email, sub: user.id };
+    const payload = { email: user.email, sub: user.id };
     return this.generateToken(payload);
   }
 

@@ -10,6 +10,7 @@ import { IUser } from 'src/auth/interface/userEntity';
 @Injectable()
 export class UserService {
   constructor(@InjectConnection() private readonly knex: Knex) {}
+
   async create(user: CreateUserDto): Promise<ResponseUserDto> {
     await this.knex('user').insert<IUser>(user);
     const { password, ...data } = user;
@@ -26,12 +27,8 @@ export class UserService {
   }
 
   async findAll() {
-    try {
-      const users = await this.knex.table('user');
-      return { users };
-    } catch (err) {
-      throw new Error(err);
-    }
+    const users = await this.knex.table('user');
+    return { users };
   }
 
   findOne(id: number) {
@@ -57,9 +54,8 @@ export class UserService {
       .where({ email: email })
       .first();
     if (!user) {
-      return null;
+      throw new NotFoundException('User does not exist');
     }
-
     return user;
   }
 }

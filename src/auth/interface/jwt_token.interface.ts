@@ -1,5 +1,5 @@
 export interface jwtTokenData {
-  userEmail: string;
+  email: string;
   sub: number;
   iat?: number;
   exp?: number;

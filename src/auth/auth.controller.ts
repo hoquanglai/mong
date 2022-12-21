@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  HttpException,
   NotFoundException,
   Post,
   Req,
@@ -38,13 +39,19 @@ export class AuthController {
 
   @Post('login-google')
   async loginGoogle(@Req() req: Request, @Res() res: Response) {
-    const user: any = req.user;
-    const userId = await this.userService.createThirdParty(user);
-    const token = await this.authService.generateToken({
-      id: userId,
-      email: user?.email,
-    });
-    return res.status(200).json(new SuccessResponse('Login successful', token));
+    try {
+      const user: any = req.user;
+      const userId = await this.userService.createThirdParty(user);
+      const token = await this.authService.generateToken({
+        id: userId,
+        email: user?.email,
+      });
+      return res
+        .status(200)
+        .json(new SuccessResponse('Login successful', token));
+    } catch (err) {
+      throw new HttpException(err.message, 400);
+    }
   }
 
   @UseGuards(AuthGuard('local'))
