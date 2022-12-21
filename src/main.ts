@@ -1,9 +1,18 @@
-import { NestFactory } from '@nestjs/core';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './exception_filter';
+import { join } from 'path';
+
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const { httpAdapter } = app.get(HttpAdapterHost);
   await app.listen(3000);
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
+  app.enableCors();
+  app.setGlobalPrefix('api');
 }
 bootstrap();
